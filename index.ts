@@ -2,7 +2,7 @@ import { Callback, Context, Handler } from "aws-lambda";
 import { Browser, Page, PuppeteerLaunchOptions } from "puppeteer";
 import { PuppeteerExtra } from "puppeteer-extra";
 
-interface ExampleEvent {}
+interface ExampleEvent { }
 
 export const handler: Handler = async (
   event: ExampleEvent,
@@ -29,23 +29,23 @@ export const handler: Handler = async (
 
     const launchOptions: PuppeteerLaunchOptions = context.functionName
       ? {
-          headless: true,
-          executablePath: puppeteer.executablePath(),
-          args: [
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--disable-gpu",
-            "--single-process",
-            "--incognito",
-            "--disable-client-side-phishing-detection",
-            "--disable-software-rasterizer",
-          ],
-        }
+        headless: true,
+        executablePath: puppeteer.executablePath(),
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+          "--single-process",
+          "--incognito",
+          "--disable-client-side-phishing-detection",
+          "--disable-software-rasterizer",
+        ],
+      }
       : {
-          headless: false,
-          executablePath: puppeteer.executablePath(),
-        };
+        headless: false,
+        executablePath: puppeteer.executablePath(),
+      };
 
     const browser: Browser = await puppeteer.launch(launchOptions);
     const page: Page = await browser.newPage();
@@ -58,3 +58,14 @@ export const handler: Handler = async (
     return e;
   }
 };
+
+// Test - npx ts-node index.ts
+(async () => {
+  try {
+    const event: ExampleEvent = {};
+    //@ts-ignore
+    await handler(event, {}, () => { });
+  } catch (e) {
+    console.log("Error in Lambda Handler:", e);
+  }
+})();
