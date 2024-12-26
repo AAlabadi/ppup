@@ -13,6 +13,6 @@ functions:
     memorySize: 256
     timeout: 60
     image:
-      uri: 654654376195.dkr.ecr.us-west-2.amazonaws.com/scraper:latest
+      uri: 654654376195.dkr.ecr.us-west-2.amazonaws.com/puppeteer-scraper:latest
       command:
         - dist/index.handler
