@@ -1,7 +1,8 @@
-const chromium = require('chrome-aws-lambda');
-const puppeteer = require('puppeteer-core');
+import { APIGatewayEvent, Context } from 'aws-lambda';
+import chromium from 'chrome-aws-lambda';
+import puppeteer from 'puppeteer-core';
 
-exports.handler = async (event) => {
+export const handler = async (event: APIGatewayEvent, context: Context) => {
   let browser = null;
 
   try {
@@ -18,20 +19,11 @@ exports.handler = async (event) => {
         '--disable-background-timer-throttling',
         '--disable-backgrounding-occluded-windows',
         '--disable-renderer-backgrounding',
-        '--headless',
-        '--disable-crash-reporter',
-        '--disable-extensions',
-        '--disable-sync',
-        '--disable-features=site-per-process',
-        '--enable-logging',
-        '--v=1'
+        '--headless'
       ],
       executablePath: await chromium.executablePath,
       headless: true,
       ignoreHTTPSErrors: true,
-      userDataDir: '/tmp/user-data',
-      devtools: false,
-      defaultViewport: chromium.defaultViewport,
     });
 
     console.log('Creating a new page...');
@@ -57,7 +49,7 @@ exports.handler = async (event) => {
     }
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: (error as Error).message }),
+      body: JSON.stringify({ error: error.message }),
     };
   }
 };
