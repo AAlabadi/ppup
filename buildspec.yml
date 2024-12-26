@@ -1,7 +1,7 @@
 version: 0.2
 env:
   variables:
-    REGION: <region>
+    REGION: us-west-2
     VERSION: "1"
 
 phases:

@@ -13,8 +13,7 @@
     "puppeteer": "^22.7.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-proxy": "^1.0.2",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "chrome-aws-lambda": "^10.1.0"
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.137",
