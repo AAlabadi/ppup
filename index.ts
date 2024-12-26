@@ -1,9 +1,14 @@
 import { Callback, Context, Handler } from "aws-lambda";
+import { Browser, Page, PuppeteerLaunchOptions } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
-// ✅ Add Stealth Plugin to avoid bot detection
+// Add Stealth Plugin for bot detection evasion
 puppeteer.use(StealthPlugin());
+
+interface ExampleEvent {
+  product_name: string;
+}
 
 /**
  * 🧠 Extract Dimensions and Weight from Text
@@ -34,9 +39,9 @@ function findDimensionsAndWeight(detailsText: string) {
     if (match) {
       let [_, lengthVal, widthVal, heightVal, unit] = match;
 
-      length = parseFloat(lengthVal);
-      width = parseFloat(widthVal);
-      height = parseFloat(heightVal);
+      length = parseFloat(lengthVal) || 0;
+      width = parseFloat(widthVal) || 0;
+      height = parseFloat(heightVal) || 0;
 
       if (!isNaN(length) && !isNaN(width) && !isNaN(height)) {
         if (unit) {
@@ -90,7 +95,7 @@ function findDimensionsAndWeight(detailsText: string) {
     }
   }
 
-  if (dimensionalWeight > weight) {
+  if (!isNaN(dimensionalWeight) && (isNaN(weight) || dimensionalWeight > weight)) {
     weight = dimensionalWeight;
   }
 
@@ -108,17 +113,16 @@ function findDimensionsAndWeight(detailsText: string) {
  * 🚀 AWS Lambda Handler
  */
 export const handler: Handler = async (
-  event: any,
+  event: ExampleEvent,
   context: Context,
   callback: Callback
 ): Promise<any> => {
-  let browser = null;
+  let browser: Browser | null = null;
+
   try {
     console.log("🔍 Event Received:", JSON.stringify(event));
 
-    const productName = event.product_name || "default_product";
-
-    if (!productName) {
+    if (!event.product_name) {
       return {
         statusCode: 400,
         body: JSON.stringify({ error: "❌ Please provide 'product_name' in the event." })
@@ -140,18 +144,20 @@ export const handler: Handler = async (
       ]
     });
 
-    const page = await browser.newPage();
+    const page: Page = await browser.newPage();
     await page.goto('https://www.google.com', { waitUntil: 'networkidle2' });
-    await page.type('textarea[name="q"], input[name="q"]', `What is the weight for ${productName}`);
+    await page.type('textarea[name="q"], input[name="q"]', `What is the weight for ${event.product_name}`);
     await page.keyboard.press('Enter');
     await page.waitForSelector('#search', { timeout: 30000 });
 
     // ✅ Extract snippets
     const snippets = await page.$$eval(
       '.IsZvec, .VwiC3b, .BNeawe.s3v9rd.AP7Wnd',
-      elements => Array.from(new Set(
-        elements.map(el => el.innerText).filter(text => text.trim() !== '')
-      ))
+      (elements: Element[]) =>
+        Array.from(new Set(
+          elements.map(el => (el as HTMLElement).innerText)
+            .filter(text => text.trim() !== '')
+        ))
     );
 
     if (!snippets.length) {
@@ -160,11 +166,8 @@ export const handler: Handler = async (
 
     console.log(`✅ Extracted ${snippets.length} snippets.`);
 
-    // Combine all snippets into one string
-    const combinedText = snippets.join(' ');
-
     // ✅ Extract Dimensions and Weight
-    const result = findDimensionsAndWeight(combinedText);
+    const result = findDimensionsAndWeight(snippets.join(' '));
 
     return {
       statusCode: 200,
